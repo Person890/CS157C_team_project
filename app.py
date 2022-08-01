@@ -1,6 +1,8 @@
 from pymongo import MongoClient
 
 # functions
+
+
 def record_call():
     dateinput = input('Type start date in format: "MM/DD/YYYY": ')
     timeinput = input('Type time in format "00:00:00": ')
@@ -15,14 +17,18 @@ def record_call():
         print("something went wrong")
     cont_menu()
 
+
 def return_call_number():
     callTypeInput = input(
         'Please type the call type (STOLEN VEHICLE, PERSON DOWN,...): ')
     myquery = {"CALL_TYPE": callTypeInput}
     mydoc = db.policeData.find(myquery)
+    cont_menu()
+
 
 def update_call():
     print("you pressed 3")
+
 
 def return_call_details():
     idInput = input("Type in the ID of the call: ")
@@ -51,16 +57,66 @@ def calls_by_emp():
         mydoc = db.policeData.find(myquery)
 
 
+def aggregate_calls_per_type():
+    print('')
+    print('--- Number of Calls per Day ---')
+    start_date = input("Enter start date in format: 'MM/DD/YYYY': ")
+    end_date = input("Enter end date in format: 'MM/DD/YYYY': ")
+    query = [{
+        "$match": {
+            "OFFENSE_DATE": {
+                "$gte": start_date,
+                "$lt": end_date}
+        }
+    },
+        {
+            "$group": {"_id": "$CALL_TYPE", "count": {"$sum":1}}
+    }
+    ]
+    cur = db.policeData.aggregate(query)
+    for doc in cur:
+        print(doc)
+
+
 def aggregate_calls_per_day():
-    print("Hello from a function")
+    print('')
+    print('--- Number of Calls per Day ---')
+    start_date = input("Enter start date in format: 'MM/DD/YYYY': ")
+    end_date = input("Enter end date in format: 'MM/DD/YYYY': ")
+    query = [{
+        "$match": {
+            "OFFENSE_DATE": {
+                "$gte": start_date,
+                "$lt": end_date}
+        }
+    },
+        {
+            "$group": {"_id": "$OFFENSE_DATE", "count": {"$sum":1}}
+    }
+    ]
+    cur = db.policeData.aggregate(query)
+    for doc in cur:
+        print(doc)
 
-
-def aggregate_calls_per_call_type():
-    print("Hello from a function")
-
-
-def delete_calls_by_type():
-    print("Hello from a function")
+def count_calls_by_priority():
+    print('')
+    print('--- Count Calls by Priotiy ---')
+    start_date = input("Enter start date in format: 'MM/DD/YYYY': ")
+    end_date = input("Enter end date in format: 'MM/DD/YYYY': ")
+    query = [{
+        "$match": {
+            "OFFENSE_DATE": {
+                "$gte": start_date,
+                "$lt": end_date}
+        }
+    },
+        {
+            "$group": {"_id": "$PRIORITY", "count": {"$sum": 1}}
+    }
+    ]
+    cur = db.policeData.aggregate(query)
+    for doc in cur:
+        print(doc)
 
 
 def delete_calls_by_call_number():
@@ -109,9 +165,9 @@ while(not q):
     print('(4) ReturnCallDetails')
     print('(5) CallsbyDate')
     print('(6) CallsbyEmp')
-    print('(7) AggregateCallsPerDay')
-    print('(8) AggregateCallsPerCallType')
-    print('(9) DeleteCallsByType')
+    print('(7) AggregateCallsPerType')
+    print('(8) AggregateCallsPerDay')
+    print('(9) AverageCallsByType')
     print('(10) DeleteCallsByNumber')
     print("-------------")
     print()
@@ -123,25 +179,34 @@ while(not q):
         q = True
     elif str(user) == '1':
         record_call()
+        cont_menu()
     elif str(user) == '2':
         return_call_number()
+        cont_menu()
     elif str(user) == '3':
         update_call()
+        cont_menu()
     elif str(user) == '4':
         return_call_details()
+        cont_menu()
     elif str(user) == '5':
         calls_by_date()
+        cont_menu()
     elif str(user) == '6':
         calls_by_emp()
+        cont_menu()
     elif str(user) == '7':
-        aggregate_calls_per_day()
+        aggregate_calls_per_type()
+        cont_menu()
     elif str(user) == '8':
-        aggregate_calls_per_call_type()
+        aggregate_calls_per_day()
+        cont_menu()
     elif str(user) == '9':
-        delete_calls_by_type()
+        count_calls_by_priority()
+        cont_menu()
     elif str(user) == '10':
         delete_calls_by_call_number()
-        q = cont_menu()
+        cont_menu()
 
 # close the connection
 client.close()
