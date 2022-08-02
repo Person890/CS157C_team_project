@@ -1,11 +1,12 @@
 from pymongo import MongoClient
+from datetime import datetime
 
 # functions
 # function 1
 def record_call():
     print('')
     print('--- Record (insert) a New Call ---')
-    dateinput = input('Type offense date in format: "MM/DD/YYYY": ')
+    dateinput = input("Type offense date in format: 'YYYY-MM-DD': ")
     timeinput = input('Type offense time in format "00:00:00": ')
     calltypeinput = input('Type in the type of call: ')
     address = input('Type in the address (location) of the call: ')
@@ -21,18 +22,38 @@ def record_call():
 def return_call_number():
     print('')
     print('--- Return Call Number  ---')
-    dateinput = input('Type the date of the offense in format: "MM/DD/YYYY": ')
+    dateinput = input("Type offense date in format: 'YYYY-MM-DD': ")
     typeinput = input('enter in the type of call: ')
-    #myquery = {"OFFENSE_DATE": {"$lte": dateinput}, "OFFENSE_DATE":{"$lte": dateinput},
-    #"CALL_TYPE":typeinput},{"CALL_NUMBER":1}
-    mydoc = db.policeData.find({"OFFENSE_DATE": {"$lte": dateinput}, "OFFENSE_DATE":{"$lte": dateinput},
+    mydoc = db.policeData.find({"OFFENSE_DATE": dateinput,
     "CALL_TYPE":typeinput},{"CALL_NUMBER":1, "CALL_TYPE":1})
     print_result(mydoc)
 
 # function 3
 def update_call():
-    print("you pressed 3")
+    print('')
+    print('--- Update an Existing Call ---')
+    print("First, find the call(s) to update.")
+    choice = input("Select a field to search by: (1) OFFENSE_DATE (2) CALL_NUMBER: ")
+    if str(choice) == "1":
+        dateinput = input("Type the date of the offense in format: 'YYYY-MM-DD': ")
+        timeinput = input('Type offense time in format "00:00:00": ')
+        queryfind = {"OFFENSE_DATE": dateinput, "OFFENSE_TIME": timeinput }
+    elif str(choice) == "2":
+        callnum = input('Type in the call number: ')
+        queryfind = {"CALL_NUMBER": callnum}
+    else:
+        print("please enter a valid choice")
 
+    # returning matching queries
+    cur = db.policeData.find(queryfind)
+    print_result(cur)
+    # check the queries are right
+    choice = input("update all these calls? (Y/N): ")
+    if str(choice).lower() == "y":
+        field = input("Enter the field to update: ")
+        value = input("Enter the value to update " + str(field) + " to: ")
+        db.policeData.update_many(queryfind,{"$set":{field:value}})
+    
 # Function 4
 def return_call_details():
     print('')
@@ -47,19 +68,17 @@ def calls_by_date():
     print('')
     print('--- Calls by Offense Date ---')
     print("This query will take in a range of dates and return calls within the range.")
-    gteInput = input("Enter start date in format: 'MM/DD/YYYY': ")
-    lteInput = input("Enter end date in format: 'MM/DD/YYYY': ")
+    gteInput = input("Enter start offense date in format: 'YYYY-MM-DD': ")
+    lteInput = input("Enter end offense date in format: 'YYYY-MM-DD': ")
     choice = input("Would you like to narrow by OFFENSE_TIME? (Y/N): ")
     if str(choice).lower() == "y":
         time_start = input('Type start time in format "00:00:00": ')
         time_end = input('Type end time in format "00:00:00": ')
-        myquery = {"OFFENSE_DATE": {"$gte": gteInput},
-               "OFFENSE_DATE": {"$lte": lteInput},
+        myquery = {"OFFENSE_DATE": {"$gte": gteInput,"$lte": lteInput},
                "OFFENSE_TIME": {"$gte": time_start},
                "OFFENSE_TIME": {"$lte": time_end},}
     else:
-        myquery = {"OFFENSE_DATE": {"$gte": gteInput},
-               "OFFENSE_DATE": {"$lte": lteInput}, }
+        myquery = {"OFFENSE_DATE": {"$gte": gteInput,"$lte": lteInput} }
     mydoc = db.policeData.find(myquery)
     print_result(mydoc)
 
@@ -72,10 +91,10 @@ def calls_by_emp():
     eidInput = int(eidInput)
     narrowByDate = input("Do you want to narrow the search by date? (Y/N): ")
     if (str(narrowByDate).lower() == "y"):
-        start_date = input("Enter start date in format: 'MM/DD/YYYY': ")
-        end_date = input("Enter end date in format: 'MM/DD/YYYY': ")
-        myquery = {"EID": eidInput, "START_DATE": {
-            "$gte": start_date}, "START_DATE": {"$lte": end_date}, }
+        start_date = input("Enter start offense date in format: 'YYYY-MM-DD': ")
+        end_date = input("Enter end offense date in format: 'YYYY-MM-DD': ")
+        myquery = {"EID": eidInput, "OFFENSE_DATE": {
+            "$gte": start_date,"$lte": end_date}, }
     else:
         myquery = {"EID": eidInput}
     cur = db.policeData.find(myquery)
@@ -85,8 +104,8 @@ def calls_by_emp():
 def aggregate_calls_per_type():
     print('')
     print('--- Number of Calls per Type ---')
-    start_date = input("Enter start date in format: 'MM/DD/YYYY': ")
-    end_date = input("Enter end date in format: 'MM/DD/YYYY': ")
+    start_date = input("Enter start offense date in format: 'YYYY-MM-DD': ")
+    end_date = input("Enter end offense date in format: 'YYYY-MM-DD': ")
     query = [{
         "$match": {
             "OFFENSE_DATE": {
@@ -106,8 +125,8 @@ def aggregate_calls_per_type():
 def aggregate_calls_per_day():
     print('')
     print('--- Number of Calls per Day ---')
-    start_date = input("Enter start date in format: 'MM/DD/YYYY': ")
-    end_date = input("Enter end date in format: 'MM/DD/YYYY': ")
+    start_date = input("Enter start offense date in format: 'YYYY-MM-DD': ")
+    end_date = input("Enter end offense date in format: 'YYYY-MM-DD': ")
     query = [{
         "$match": {
             "OFFENSE_DATE": {
@@ -127,8 +146,8 @@ def aggregate_calls_per_day():
 def count_calls_by_priority():
     print('')
     print('--- Count Calls by Priotiy ---')
-    start_date = input("Enter start date in format: 'MM/DD/YYYY': ")
-    end_date = input("Enter end date in format: 'MM/DD/YYYY': ")
+    start_date = input("Enter start offense date in format: 'YYYY-MM-DD': ")
+    end_date = input("Enter end offense date in format: 'YYYY-MM-DD': ")
     query = [{
         "$match": {
             "OFFENSE_DATE": {
